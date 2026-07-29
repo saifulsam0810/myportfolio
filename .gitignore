@@ -52,3 +52,28 @@ prompt
 server.log
 # Skills directory
 /skills/
+# ===== MyPortfolio deployment exclusions =====
+
+# Database (binary — regenerate with `bun run db:push && bun run prisma/seed.ts`)
+db/*.db
+db/*.db-journal
+
+# Internal work artifacts
+worklog.md
+agent-ctx/
+upload/
+download/
+
+# Sandbox-specific config (not needed for deployment)
+Caddyfile
+.zscripts
+.z-ai-config
+
+# Examples & sandbox tests (not part of the app)
+examples/
+tests/
+
+# OS files
+Thumbs.db
+tool-results
+mini-services/
