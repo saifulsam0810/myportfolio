@@ -2,6 +2,10 @@
 // Populates dummy database with realistic Malaysian government portfolio data per PRD
 
 import { PrismaClient } from '@prisma/client'
+import { config } from 'dotenv'
+
+// Explicitly load .env so DATABASE_URL is available when running this script directly
+config()
 
 const db = new PrismaClient()
 

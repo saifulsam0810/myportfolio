@@ -62,7 +62,7 @@ cp .env.example .env
 bun run db:push
 
 # Seed dummy data (4 jawatan, 3 flowcharts, 4 SOPs, 8 borang, 8 rujukan, 4 users)
-bun run prisma/seed.ts
+bun run db:seed
 
 # Start the development server
 bun run dev
