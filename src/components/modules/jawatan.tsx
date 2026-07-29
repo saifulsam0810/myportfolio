@@ -218,6 +218,7 @@ function JawatanList() {
 function JawatanDetail({ jawatan }: { jawatan: JawatanType }) {
   const setSelectedJawatanId = useAppStore((s) => s.setSelectedJawatanId)
   const setActiveModule = useAppStore((s) => s.setActiveModule)
+  const setQrPresetKod = useAppStore((s) => s.setQrPresetKod)
   const tint = getAvatarTint(jawatan.kodJawatan)
 
   return (
@@ -274,7 +275,10 @@ function JawatanDetail({ jawatan }: { jawatan: JawatanType }) {
             <Button
               variant="outline"
               className="glass-subtle border-0 rounded-full"
-              onClick={() => setActiveModule('qr')}
+              onClick={() => {
+                setQrPresetKod(jawatan.kodJawatan)
+                setActiveModule('qr')
+              }}
             >
               <QrCodeIcon className="size-4" /> Lihat Kod QR
             </Button>

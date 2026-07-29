@@ -20,23 +20,29 @@ import {
   ShieldCheck,
   X,
   Building2,
+  LogIn,
+  LogOut,
+  ChevronDown,
+  Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
-import { usePengguna } from '@/lib/hooks'
 import type { ModuleKey, Role } from '@/lib/types'
+import { SignInDialog } from '@/components/sign-in-dialog'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const NAV: Array<{
   key: ModuleKey
@@ -59,9 +65,9 @@ const NAV: Array<{
 function AnimatedBackground() {
   return (
     <div aria-hidden className="fixed inset-0 -z-10 overflow-hidden bg-gradient-hero">
-      <div className="absolute -top-32 -left-24 size-[28rem] rounded-full bg-teal-400/25 blur-3xl animate-blob" />
+      <div className="absolute -top-32 -left-24 size-[28rem] rounded-full bg-blue-700/25 blur-3xl animate-blob" />
       <div className="absolute top-1/3 -right-24 size-[26rem] rounded-full bg-amber-300/25 blur-3xl animate-blob animation-delay-2000" />
-      <div className="absolute -bottom-32 left-1/3 size-[30rem] rounded-full bg-emerald-400/20 blur-3xl animate-blob animation-delay-4000" />
+      <div className="absolute -bottom-32 left-1/3 size-[30rem] rounded-full bg-blue-500/20 blur-3xl animate-blob animation-delay-4000" />
     </div>
   )
 }
@@ -122,7 +128,7 @@ function BrandHeader() {
   return (
     <div className="flex items-center gap-3 px-1">
       <div className="relative">
-        <div className="size-11 rounded-xl bg-gradient-to-br from-primary via-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/40">
+        <div className="size-11 rounded-xl bg-gradient-to-br from-primary via-primary to-blue-900 flex items-center justify-center shadow-lg shadow-primary/40">
           <Building2 className="size-6 text-white" />
         </div>
         <div className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-amber-400 border-2 border-background" />
@@ -139,10 +145,9 @@ function BrandHeader() {
   )
 }
 
-function RoleSwitcher() {
-  const { role, setRole } = useAppStore()
-  const { data: pengguna } = usePengguna()
-  const currentUser = pengguna?.find((p) => p.peranan === role) ?? pengguna?.[0]
+function AuthMenu() {
+  const { currentUser, isAuthenticated, role, logoutUser } = useAppStore()
+  const [signInOpen, setSignInOpen] = React.useState(false)
 
   const roleStyles: Record<Role, string> = {
     Admin: 'bg-rose-500/15 text-rose-700 border-rose-500/30',
@@ -151,42 +156,93 @@ function RoleSwitcher() {
     Awam: 'bg-slate-500/15 text-slate-700 border-slate-500/30',
   }
 
-  return (
-    <div className="flex items-center gap-2">
-      <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-        <SelectTrigger className="w-[150px] h-9 glass-subtle border-0 rounded-full text-xs font-medium">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Admin">🛡️ Admin</SelectItem>
-          <SelectItem value="Penyelia">📋 Penyelia</SelectItem>
-          <SelectItem value="Pengguna">👤 Pengguna</SelectItem>
-          <SelectItem value="Awam">🌐 Awam (QR)</SelectItem>
-        </SelectContent>
-      </Select>
-      <div className="hidden md:flex items-center gap-2">
-        <Avatar className="size-9 border-2 border-background shadow-md">
-          <AvatarFallback className="bg-gradient-to-br from-primary/80 to-emerald-600 text-white text-xs font-semibold">
-            {currentUser?.nama
-              ?.split(' ')
-              .slice(0, 2)
-              .map((n) => n[0])
-              .join('') || 'MP'}
-          </AvatarFallback>
-        </Avatar>
-        <div className="hidden lg:block leading-tight">
-          <div className="text-xs font-semibold text-foreground max-w-[140px] truncate">
-            {currentUser?.nama ?? 'Pengguna Sistem'}
-          </div>
+  // Not signed in → show "Log Masuk" button + Awam badge
+  if (!isAuthenticated || !currentUser) {
+    return (
+      <>
+        <div className="hidden sm:flex items-center gap-1.5 mr-1">
           <Badge
             variant="outline"
-            className={cn('h-4 px-1.5 text-[10px] font-semibold', roleStyles[role])}
+            className={cn('h-6 px-2 text-[10px] font-semibold gap-1', roleStyles.Awam)}
           >
-            {role}
+            <Globe className="size-3" /> Awam
           </Badge>
         </div>
-      </div>
-    </div>
+        <Button
+          onClick={() => setSignInOpen(true)}
+          className="rounded-full h-9 px-4"
+          size="sm"
+        >
+          <LogIn className="size-4 mr-1.5" /> Log Masuk
+        </Button>
+        <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+      </>
+    )
+  }
+
+  // Signed in → show user avatar + dropdown with sign-out
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="flex items-center gap-2 rounded-full glass-subtle border-0 pl-1.5 pr-2.5 h-9 hover:bg-accent/30 transition-colors"
+            aria-label="Menu pengguna"
+          >
+            <Avatar className="size-7 border border-background">
+              <AvatarFallback className="bg-gradient-to-br from-primary/80 to-primary text-primary-foreground text-[10px] font-semibold">
+                {currentUser.nama
+                  .split(' ')
+                  .slice(0, 2)
+                  .map((n) => n[0])
+                  .join('')}
+              </AvatarFallback>
+            </Avatar>
+            <div className="hidden md:block leading-tight text-left">
+              <div className="text-xs font-semibold text-foreground max-w-[120px] truncate">
+                {currentUser.nama}
+              </div>
+            </div>
+            <Badge
+              variant="outline"
+              className={cn('h-4 px-1.5 text-[10px] font-semibold hidden lg:inline-flex', roleStyles[role])}
+            >
+              {role}
+            </Badge>
+            <ChevronDown className="size-3.5 text-muted-foreground" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-60 glass-strong border-0">
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-semibold leading-none text-foreground">{currentUser.nama}</p>
+              <p className="text-xs leading-none text-muted-foreground">{currentUser.emel}</p>
+              <div className="pt-1.5">
+                <Badge
+                  variant="outline"
+                  className={cn('text-[10px] font-semibold', roleStyles[role])}
+                >
+                  {currentUser.peranan}
+                </Badge>
+                {currentUser.unit && (
+                  <span className="text-[10px] text-muted-foreground ml-2">{currentUser.unit}</span>
+                )}
+              </div>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              logoutUser()
+              toast.info('Anda telah log keluar')
+            }}
+            className="text-destructive focus:text-destructive cursor-pointer"
+          >
+            <LogOut className="size-4 mr-2" /> Log Keluar
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   )
 }
 
@@ -228,6 +284,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { activeModule } = useAppStore()
   const activeLabel = NAV.find((n) => n.key === activeModule)?.label ?? 'Papan Pemuka'
 
+  // Hydrate auth state from localStorage on mount
+  const hydrateAuth = useAppStore((s) => s.hydrateAuth)
+  React.useEffect(() => {
+    hydrateAuth()
+  }, [hydrateAuth])
+
   // Close sidebar on module change handled in NavList onNavigate
   return (
     <div className="relative min-h-screen flex flex-col">
@@ -263,7 +325,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2 ml-auto">
             <ThemeToggle />
-            <RoleSwitcher />
+            <AuthMenu />
           </div>
         </div>
       </header>

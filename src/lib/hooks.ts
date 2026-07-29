@@ -22,10 +22,11 @@ async function fetcher<T>(url: string): Promise<T> {
 }
 
 // ===== Jawatan =====
-export function useJawatanList(q?: string) {
+export function useJawatanList(q?: string, opts?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['jawatan', q ?? ''],
     queryFn: () => fetcher<Jawatan[]>(`/api/jawatan${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+    enabled: opts?.enabled ?? true,
   })
 }
 export function useJawatan(id: string | null) {
@@ -147,6 +148,24 @@ export function usePengguna() {
   return useQuery({
     queryKey: ['pengguna'],
     queryFn: () => fetcher<Pengguna[]>('/api/pengguna'),
+  })
+}
+
+// ===== Auth =====
+export function useLogin() {
+  return useMutation({
+    mutationFn: async (creds: { email: string; kataLaluan: string }) => {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(creds),
+      })
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({ error: 'Gagal log masuk' }))
+        throw new Error(e.error || `HTTP ${res.status}`)
+      }
+      return res.json()
+    },
   })
 }
 

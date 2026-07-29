@@ -321,7 +321,7 @@ export function DashboardModule() {
         <h3 className="font-semibold text-foreground mb-3">Akses Pantas</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Cari Jawatan', icon: Briefcase, m: 'jawatan' as ModuleKey, tint: 'from-teal-500/20 to-teal-600/10 text-teal-700' },
+            { label: 'Cari Jawatan', icon: Briefcase, m: 'jawatan' as ModuleKey, tint: 'from-blue-600/20 to-blue-800/10 text-blue-800' },
             { label: 'Proses Kerja', icon: Workflow, m: 'carta-alir' as ModuleKey, tint: 'from-amber-500/20 to-amber-600/10 text-amber-700' },
             { label: 'Muat Turun Borang', icon: FileText, m: 'borang' as ModuleKey, tint: 'from-violet-500/20 to-violet-600/10 text-violet-700' },
             { label: 'Jana Kod QR', icon: QrCodeIcon, m: 'qr' as ModuleKey, tint: 'from-pink-500/20 to-pink-600/10 text-pink-700' },

@@ -180,6 +180,9 @@ export interface Pengguna {
   updatedAt: string
 }
 
+// Authenticated user (never includes kataLaluan)
+export type AuthUser = Pengguna
+
 export interface DashboardData {
   counts: {
     jawatan: number

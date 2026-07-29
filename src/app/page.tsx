@@ -1,7 +1,9 @@
 'use client'
 
+import { Suspense } from 'react'
 import { AppShell } from '@/components/app-shell'
 import { Providers } from '@/components/providers'
+import { DeepLinkHandler } from '@/components/deep-link-handler'
 import { useAppStore } from '@/lib/store'
 import { DashboardModule } from '@/components/modules/dashboard'
 import { JawatanModule } from '@/components/modules/jawatan'
@@ -53,6 +55,9 @@ function ActiveModule() {
 export default function Home() {
   return (
     <Providers>
+      <Suspense fallback={null}>
+        <DeepLinkHandler />
+      </Suspense>
       <AppShell>
         <ActiveModule />
       </AppShell>

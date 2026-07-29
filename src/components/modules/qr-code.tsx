@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { GlassCard, SectionHeader, PageLoader, EmptyState } from '@/components/glass'
 import { useJawatanList, useBorangList, useQrCode } from '@/lib/hooks'
+import { useAppStore } from '@/lib/store'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Select,
@@ -52,17 +53,36 @@ export function QrCodeModule() {
   const jawatanList = useJawatanList()
   const borangList = useBorangList()
 
+  // Pre-select a jawatan when arriving from a profile's "Lihat Kod QR" button
+  const qrPresetKod = useAppStore((s) => s.qrPresetKod)
+  const setQrPresetKod = useAppStore((s) => s.setQrPresetKod)
+  const presetApplied = React.useRef(false)
+
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
 
   const selectedJawatan = jawatanList.data?.find((j) => j.id === jawatanId)
   const selectedBorang = borangList.data?.find((b) => b.id === borangId)
 
-  // Auto-select first item when list loads for the active source
+  // Pre-select jawatan from preset code (when navigated from profile detail)
   React.useEffect(() => {
-    if (source === 'jawatan' && !jawatanId && jawatanList.data && jawatanList.data.length > 0) {
+    if (presetApplied.current) return
+    if (qrPresetKod && jawatanList.data && jawatanList.data.length > 0) {
+      const found = jawatanList.data.find((j) => j.kodJawatan === qrPresetKod)
+      if (found) {
+        setSource('jawatan')
+        setJawatanId(found.id)
+        presetApplied.current = true
+        setQrPresetKod(null) // consume
+      }
+    }
+  }, [qrPresetKod, jawatanList.data, setQrPresetKod])
+
+  // Auto-select first item when list loads for the active source (only if no preset)
+  React.useEffect(() => {
+    if (source === 'jawatan' && !jawatanId && !qrPresetKod && jawatanList.data && jawatanList.data.length > 0) {
       setJawatanId(jawatanList.data[0].id)
     }
-  }, [source, jawatanId, jawatanList.data])
+  }, [source, jawatanId, jawatanList.data, qrPresetKod])
 
   React.useEffect(() => {
     if (source === 'borang' && !borangId && borangList.data && borangList.data.length > 0) {
@@ -70,13 +90,13 @@ export function QrCodeModule() {
     }
   }, [source, borangId, borangList.data])
 
-  // Derive the text/URL to encode into the QR
+  // Derive the text/URL to encode into the QR (deep-link format so scanning opens the profile)
   const selectedText = React.useMemo<string | null>(() => {
     if (source === 'jawatan' && selectedJawatan) {
-      return `${origin}/jawatan/${selectedJawatan.kodJawatan}`
+      return `${origin}/?jawatan=${encodeURIComponent(selectedJawatan.kodJawatan)}`
     }
     if (source === 'borang' && selectedBorang) {
-      return `${origin}/borang/${selectedBorang.kodBorang}`
+      return `${origin}/?borang=${encodeURIComponent(selectedBorang.kodBorang)}`
     }
     if (source === 'custom' && customUrl.trim()) {
       return customUrl.trim()

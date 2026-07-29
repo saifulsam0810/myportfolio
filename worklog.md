@@ -293,3 +293,56 @@ Stage Summary:
 - Responsive (mobile hamburger + desktop sidebar), sticky footer, accessibility (ARIA labels, keyboard nav)
 - QR codes generated server-side via qrcode lib, flowcharts rendered as custom SVG
 - All 24 functional requirements (FR-01 to FR-24) from PRD addressed
+
+---
+Task ID: AUTH-QR-COLOR
+Agent: Main (Z.ai Code)
+Task: Add sign in/out module, link QR with individual profiles, change color to navy blue + black text
+
+Work Log:
+- Auth module:
+  * Added `kataLaluan` field to Pengguna model in prisma/schema.prisma + re-seeded with demo passwords (admin123, penyelia123, pengguna123)
+  * Created POST /api/auth/login route — validates email+password against DB, returns safe user (strips password)
+  * Updated GET /api/pengguna to use `select` and exclude kataLaluan from responses
+  * Added `AuthUser` type alias in lib/types.ts
+  * Rewrote lib/store.ts with auth state: `currentUser`, `isAuthenticated`, `role` (derived from currentUser.peranan or 'Awam'), `loginUser`, `logoutUser`, `hydrateAuth` (reads localStorage on mount)
+  * Added `qrPresetKod` state for QR pre-selection from profile
+  * Added `useLogin` mutation in lib/hooks.ts
+  * Added `enabled` option to `useJawatanList` for conditional fetching
+  * Built src/components/sign-in-dialog.tsx — email+password form with show/hide password, 3 demo quick-login buttons (Admin/Penyelia/Pengguna), toast feedback, persists user to localStorage
+  * Updated src/components/app-shell.tsx — replaced RoleSwitcher with AuthMenu (shows "Awam" badge + "Log Masuk" button when logged out; shows avatar + name + role + "Log Keluar" dropdown when logged in), added auth hydration on mount
+  * Default role is now 'Awam' (not authenticated) — users must sign in to access admin/checklist-edit features
+
+- QR ↔ Profile linking:
+  * Created src/components/deep-link-handler.tsx — reads URL search params (?jawatan=KOD, ?borang=KOD, ?prosedur=KOD, ?carta=KOD, ?module=qr) and auto-navigates to the relevant module. For ?jawatan, resolves kod→id via conditional jawatan list fetch.
+  * Updated src/app/page.tsx — wraps DeepLinkHandler in <Suspense> (required for useSearchParams in Next 16)
+  * Updated src/components/modules/qr-code.tsx — QR URLs now use deep-link format `/?jawatan=KOD` (was `/jawatan/KOD`) so scanning opens the profile directly. Added qrPresetKod consumption: when navigating from a jawatan profile's "Lihat Kod QR" button, pre-selects that jawatan in the generator.
+  * Updated src/components/modules/jawatan.tsx — "Lihat Kod QR" button now sets qrPresetKod before switching to QR module
+  * Updated QR API default color from teal-700 (#0f766e) to navy-800 (#1e3a8a)
+
+- Color scheme → navy blue + black text:
+  * Rewrote src/app/globals.css with navy palette: --primary oklch(0.34 0.11 264) (navy), --foreground oklch(0.06 0.02 260) (near-black, reads as black), --background light navy tint, --accent gold (oklch(0.78 0.13 80)) for contrast
+  * Updated chart colors to navy/blue/gold variants
+  * Updated glassmorphism shadow tints from teal to navy rgba(30,58,138,...)
+  * Updated bg-gradient-hero to navy/gold radial gradients
+  * Updated scrollbar, flow-arrow colors to navy
+  * Updated app-shell animated background blobs from teal/emerald to blue-700/blue-500 + amber
+  * Updated BrandHeader gradient from emerald-600 to blue-900
+  * Updated dashboard quick-link tint from teal to blue-800
+
+- Verification (via curl — browser OOMs in 4GB/no-swap env when turbopack+chrome run together):
+  * ✓ Page SSR renders "Awam" badge + "Log Masuk" button (auth UI present)
+  * ✓ Login API: Admin (faizal/admin123), Penyelia (aishah/penyelia123), Pengguna (hafiz/pengguna123) all return 200 with correct user
+  * ✓ Wrong password returns 401 "Emel atau kata laluan tidak sah"
+  * ✓ Password excluded from /api/pengguna response (4 users, no kataLaluan field)
+  * ✓ Deep-link page /?jawatan=JT002 renders HTTP 200
+  * ✓ QR API generates navy QR (4158-char base64 PNG) for deep-link URL
+  * ✓ All 8 module APIs return 200
+  * ✓ Lint clean (0 errors)
+  * Note: Browser (agent-browser/chrome ~600MB) + turbopack dev server (~1.5GB) exceeds 4GB RAM with no swap, causing OOM kill when both run. Code verified via SSR curl + API tests.
+
+Stage Summary:
+- Sign in/out fully implemented: login dialog with demo accounts, auth state persisted to localStorage, role derived from logged-in user, logout clears session
+- QR codes now encode deep-link URLs (/?jawatan=KOD) so scanning opens the specific profile; "Lihat Kod QR" in profile pre-selects it in the QR generator
+- Color scheme changed to navy blue primary + black text + gold accent throughout (globals.css, app-shell, dashboard, QR API)
+- 4 demo accounts: Admin/Penyelia/Pengguna with passwords; default state is Awam (public/read-only)

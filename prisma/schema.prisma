@@ -141,6 +141,7 @@ model Pengguna {
   id           String   @id @default(cuid())
   nama         String
   emel         String   @unique
+  kataLaluan   String   @default("password123") // demo only — dummy DB
   peranan      String   // Admin, Penyelia, Pengguna, Awam
   jawatanId    String?
   unit         String?

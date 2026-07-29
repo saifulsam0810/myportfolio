@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       width: body.width ?? 320,
       margin: body.margin ?? 2,
       color: {
-        dark: body.dark ?? '#0f766e', // teal-700
+        dark: body.dark ?? '#1e3a8a', // navy-800
         light: body.light ?? '#ffffff',
       },
       errorCorrectionLevel: 'H',

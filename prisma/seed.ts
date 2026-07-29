@@ -22,10 +22,10 @@ async function main() {
 
   // ============ PENGGUNA (Users) ============
   const users = [
-    { nama: 'Ahmad Faizal bin Rahman', emel: 'faizal@agensi.gov.my', peranan: 'Admin', unit: 'Unit ICT' },
-    { nama: 'Siti Aishah binti Hassan', emel: 'aishah@agensi.gov.my', peranan: 'Penyelia', unit: 'Unit Pentadbiran' },
-    { nama: 'Mohd Hafiz bin Ibrahim', emel: 'hafiz@agensi.gov.my', peranan: 'Pengguna', unit: 'Unit Pentadbiran' },
-    { nama: 'Nurul Ain binti Yusof', emel: 'nurul@agensi.gov.my', peranan: 'Pengguna', unit: 'Unit Kewangan' },
+    { nama: 'Ahmad Faizal bin Rahman', emel: 'faizal@agensi.gov.my', kataLaluan: 'admin123', peranan: 'Admin', unit: 'Unit ICT' },
+    { nama: 'Siti Aishah binti Hassan', emel: 'aishah@agensi.gov.my', kataLaluan: 'penyelia123', peranan: 'Penyelia', unit: 'Unit Pentadbiran' },
+    { nama: 'Mohd Hafiz bin Ibrahim', emel: 'hafiz@agensi.gov.my', kataLaluan: 'pengguna123', peranan: 'Pengguna', unit: 'Unit Pentadbiran' },
+    { nama: 'Nurul Ain binti Yusof', emel: 'nurul@agensi.gov.my', kataLaluan: 'pengguna123', peranan: 'Pengguna', unit: 'Unit Kewangan' },
   ]
   for (const u of users) {
     await db.pengguna.create({ data: u })
