@@ -1,0 +1,151 @@
+// Sistem MyPortfolio - Prisma Schema
+// Dummy database (SQLite) for Phase 1 PoC per PRD
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ===== MODUL 1: Skop Tugas & Tanggungjawab Jawatan =====
+model Jawatan {
+  id           String   @id @default(cuid())
+  kodJawatan   String   @unique // e.g. JT001
+  namaJawatan  String
+  gred         String   // e.g. N41
+  jabatan      String
+  bahagian     String
+  unit         String
+  penyelia     String
+  objektifAm   String   // Job Purpose
+  skopTugas    String   // JSON: array of KRA { kra, tugas[] }
+  tanggungjawab String  // JSON: array of strings (specific responsibilities)
+  hubunganKerja String  // JSON: { dalaman: [], luaran: [] }
+  autoriti     String   // JSON: { hadKuasa, melulus: [] }
+  kpi          String   // JSON: array of { kpi, sasaran }
+  qrCodeUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("jawatan")
+}
+
+// ===== MODUL 2: Carta Alir Proses Kerja =====
+model CartaAlir {
+  id          String   @id @default(cuid())
+  kodCarta    String   @unique
+  tajuk       String
+  kategori    String   // Pentadbiran, Kewangan, Sumber Manusia, Perkhidmatan Pelanggan, ICT
+  jawatanId   String?  // link to Jawatan
+  penerangan  String
+  nod         String   // JSON: array of { id, label, jenis (mula/proses/keputusan/tamat), penerangan, prosedurId? }
+  sambungan   String   // JSON: array of { from, to, label? }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("carta_alir")
+}
+
+// ===== MODUL 3: Prosedur Kerja (SOP) =====
+model ProsedurKerja {
+  id              String   @id @default(cuid())
+  kodProsedur     String   @unique // e.g. MPK/UP/003
+  tajuk           String
+  tujuan          String
+  skop            String
+  tanggungjawab   String   // JSON: array of { jawatan, peranan }
+  langkahKerja    String   // JSON: array of { no, tindakan, tanggungjawab, tempohMasa }
+  borangBerkaitan String   // JSON: array of borang IDs
+  rujukanPeraturan String  // JSON: array of rujukan IDs
+  tarikhKuatKuasa DateTime
+  tarikhSemakan   DateTime
+  versi           String   // e.g. 1.0
+  status          String   @default("Aktif") // Aktif, Dikemas Kini, Dimansuhkan
+  sejarahSemakan  String   @default("[]") // JSON: array of { versi, tarikh, perubahan }
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("prosedur_kerja")
+}
+
+// ===== MODUL 4: Checklist Tugasan =====
+model Checklist {
+  id             String   @id @default(cuid())
+  tajuk          String
+  kekerapan      String   // Harian, Mingguan, Bulanan
+  jawatanId      String?
+  unit           String
+  items          String   // JSON: array of { id, bil, tugasan, tanggungjawab, status, catatan }
+  tarikhMula     DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("checklist")
+}
+
+// Rekod tandaan checklist oleh pengguna (untuk laporan pematuhan)
+model ChecklistLog {
+  id           String   @id @default(cuid())
+  checklistId  String
+  itemId       String
+  pengguna     String
+  status       String   // Selesai, Belum Selesai
+  catatan      String?
+  tarikh       DateTime @default(now())
+
+  @@map("checklist_log")
+}
+
+// ===== MODUL 5: Borang / Templat / Dokumen Sokongan =====
+model Borang {
+  id            String   @id @default(cuid())
+  kodBorang     String   @unique
+  nama          String
+  kategori      String   // Sumber Manusia, Kewangan, Pentadbiran, Pengurusan Aset, Perkhidmatan Pelanggan, ICT
+  format        String   // PDF, Word, Excel, Fillable
+  kekerapan     String   // Kerap, Bulanan, Mingguan, Situasional
+  penerangan    String
+  failUrl       String   // download URL / file path
+  saizFail      String?
+  versi         String   @default("1.0")
+  status        String   @default("Aktif") // Aktif, Diarkib
+  tarikhKemasKini DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("borang")
+}
+
+// ===== MODUL 6: Rujukan Peraturan / Garis Panduan / SOP / Pekeliling =====
+model Rujukan {
+  id           String   @id @default(cuid())
+  kodRujukan   String   @unique
+  tajuk        String
+  kategori     String   // Peraturan Am, Pekeliling Perkhidmatan, PKPA, Arahan Perbendaharaan, SOP Dalaman, Piagam Pelanggan
+  penerangan   String
+  pautanLuaran String?  // external link to official portal
+  status       String   @default("Aktif") // Aktif, Dimansuhkan, Digantikan
+  versi        String?
+  tarikhKuatKuasa DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("rujukan")
+}
+
+// ===== MODUL: Pengguna (untuk role-based demo) =====
+model Pengguna {
+  id           String   @id @default(cuid())
+  nama         String
+  emel         String   @unique
+  peranan      String   // Admin, Penyelia, Pengguna, Awam
+  jawatanId    String?
+  unit         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("pengguna")
+}
